@@ -17,6 +17,32 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: 6
+  },
+  role: {
+    type: String,
+    enum: ['student', 'admin', 'career_counselor'],
+    default: 'student'
+  },
+  college: {
+    type: String,
+    trim: true
+  },
+  department: {
+    type: String,
+    trim: true
+  },
+  graduationYear: {
+    type: Number
+  },
+  profile: {
+    avatar: String,
+    bio: String,
+    linkedIn: String,
+    github: String
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
 });
 
