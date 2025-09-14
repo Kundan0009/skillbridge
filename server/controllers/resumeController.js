@@ -1,12 +1,27 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import pdfParse from 'pdf-parse';
 import Resume from '../models/Resume.js';
 
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-}) : null;
+// Initialize Gemini AI
+function initializeGemini() {
+  if (!process.env.GEMINI_API_KEY) {
+    console.log('Gemini API Status: Not available - using fallback analysis');
+    return null;
+  }
+  
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    console.log('Gemini API Status: Initialized successfully');
+    return model;
+  } catch (error) {
+    console.log('Gemini API Status: Not available - using fallback analysis');
+    return null;
+  }
+}
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -39,70 +54,107 @@ export const analyzeResume = async (req, res) => {
 
     const filePath = req.file.path;
     const dataBuffer = fs.readFileSync(filePath);
-    const pdfParse = (await import('pdf-parse')).default;
     const pdfData = await pdfParse(dataBuffer);
     const resumeText = pdfData.text;
 
-    // Advanced AI analysis prompt
-    const analysisPrompt = `
-    Analyze this resume comprehensively and provide detailed feedback in the following JSON format:
+    // Advanced AI analysis prompt optimized for Gemini
+    const analysisPrompt = `You are an expert resume analyst and career counselor. Analyze this resume and provide detailed feedback in VALID JSON format only. Do not include any text before or after the JSON.
 
-    {
-      "overallScore": number (0-100),
-      "atsScore": number (0-100),
-      "sections": {
-        "contact": {"score": number, "feedback": "string"},
-        "summary": {"score": number, "feedback": "string"},
-        "experience": {"score": number, "feedback": "string"},
-        "education": {"score": number, "feedback": "string"},
-        "skills": {"score": number, "feedback": "string"}
-      },
-      "strengths": ["string"],
-      "improvements": ["string"],
-      "keywords": ["string"],
-      "missingKeywords": ["string"],
-      "industryMatch": "string",
-      "recommendations": ["string"]
-    }
+Provide analysis in this exact JSON structure:
+{
+  "overallScore": 85,
+  "atsScore": 78,
+  "sections": {
+    "contact": {"score": 90, "feedback": "Complete contact information with professional email"},
+    "summary": {"score": 75, "feedback": "Strong summary but could be more specific to target role"},
+    "experience": {"score": 88, "feedback": "Good experience with quantifiable achievements"},
+    "education": {"score": 85, "feedback": "Relevant education background"},
+    "skills": {"score": 80, "feedback": "Good technical skills, add more soft skills"}
+  },
+  "strengths": ["Clear formatting", "Quantified achievements", "Relevant experience"],
+  "improvements": ["Add more keywords", "Include soft skills", "Optimize for ATS"],
+  "keywords": ["JavaScript", "React", "Node.js", "MongoDB"],
+  "missingKeywords": ["Leadership", "Team collaboration", "Project management"],
+  "industryMatch": "Technology/Software Development",
+  "recommendations": ["Add portfolio links", "Include certifications", "Quantify more achievements"]
+}
 
-    Resume text: ${resumeText}
-    `;
+Resume text to analyze:
+${resumeText}`;
 
     let analysis;
+    const model = initializeGemini();
     
-    if (!openai) {
-      // Mock analysis for development without API key
+    if (!model) {
+      // Content-based analysis
+      const wordCount = resumeText.split(' ').length;
+      const hasEmail = /@/.test(resumeText);
+      const hasPhone = /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/.test(resumeText);
+      const hasExperience = /experience|work|job|position/i.test(resumeText);
+      const hasEducation = /education|degree|university|college/i.test(resumeText);
+      const hasSkills = /skills|technologies|programming/i.test(resumeText);
+      
+      const baseScore = Math.min(40 + Math.floor(wordCount / 10), 100);
+      const contactScore = (hasEmail ? 50 : 0) + (hasPhone ? 50 : 0);
+      const experienceScore = hasExperience ? Math.min(70 + Math.floor(wordCount / 20), 100) : 40;
+      const educationScore = hasEducation ? Math.min(75 + Math.floor(wordCount / 25), 100) : 50;
+      const skillsScore = hasSkills ? Math.min(65 + Math.floor(wordCount / 15), 100) : 45;
+      
+      const overallScore = Math.floor((baseScore + contactScore + experienceScore + educationScore + skillsScore) / 5);
+      
       analysis = {
-        overallScore: 85,
-        atsScore: 78,
+        overallScore,
+        atsScore: Math.max(overallScore - 10, 0),
         sections: {
-          contact: { score: 90, feedback: "Contact information is complete and professional." },
-          summary: { score: 80, feedback: "Summary could be more specific to target roles." },
-          experience: { score: 85, feedback: "Good experience section with quantifiable achievements." },
-          education: { score: 90, feedback: "Education section is well formatted." },
-          skills: { score: 75, feedback: "Consider adding more technical skills." }
+          contact: { score: contactScore, feedback: hasEmail && hasPhone ? "Contact info complete" : "Missing contact details" },
+          summary: { score: Math.min(60 + Math.floor(wordCount / 30), 100), feedback: "Summary section analyzed" },
+          experience: { score: experienceScore, feedback: hasExperience ? "Experience section found" : "Add work experience" },
+          education: { score: educationScore, feedback: hasEducation ? "Education section present" : "Include education details" },
+          skills: { score: skillsScore, feedback: hasSkills ? "Skills section identified" : "Add technical skills" }
         },
-        strengths: ["Clear formatting", "Quantified achievements", "Professional presentation"],
-        improvements: ["Add more keywords", "Expand technical skills", "Include certifications"],
-        keywords: ["JavaScript", "React", "Node.js"],
-        missingKeywords: ["TypeScript", "AWS", "Docker"],
-        industryMatch: "Technology/Software Development",
-        recommendations: ["Consider adding a portfolio link", "Include more project details"]
+        strengths: wordCount > 200 ? ["Comprehensive content", "Detailed information"] : ["Concise format"],
+        improvements: ["Enhance with more keywords", "Add quantifiable achievements"],
+        keywords: resumeText.match(/\b(JavaScript|React|Node|Python|Java|SQL)\b/gi) || [],
+        missingKeywords: ["Leadership", "Project Management", "Communication"],
+        industryMatch: "General",
+        recommendations: ["Consider adding more specific examples", "Include measurable results"]
       };
     } else {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: analysisPrompt }],
-        temperature: 0.3,
-      });
-
       try {
-        analysis = JSON.parse(completion.choices[0].message.content);
+        console.log('Using Gemini AI for resume analysis...');
+        const result = await model.generateContent(analysisPrompt);
+        const response = await result.response;
+        let text = response.text();
+        
+        // Clean up the response to extract JSON
+        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        
+        analysis = JSON.parse(text);
+        console.log('Gemini AI analysis completed successfully');
       } catch (parseError) {
+        console.error('Gemini AI parsing error:', parseError);
+        // Fallback to basic analysis if Gemini fails
+        const wordCount = resumeText.split(' ').length;
+        const hasEmail = /@/.test(resumeText);
+        const hasPhone = /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/.test(resumeText);
+        
         analysis = {
-          overallScore: 75,
-          feedback: completion.choices[0].message.content,
-          error: "Could not parse structured analysis"
+          overallScore: Math.min(60 + Math.floor(wordCount / 20), 95),
+          atsScore: Math.min(55 + Math.floor(wordCount / 25), 90),
+          sections: {
+            contact: { score: hasEmail && hasPhone ? 95 : 60, feedback: "Contact analysis completed" },
+            summary: { score: 75, feedback: "Summary section reviewed" },
+            experience: { score: 80, feedback: "Experience section analyzed" },
+            education: { score: 78, feedback: "Education background reviewed" },
+            skills: { score: 82, feedback: "Skills assessment completed" }
+          },
+          strengths: ["Professional format", "Comprehensive content"],
+          improvements: ["Enhance with AI-powered suggestions", "Optimize keywords"],
+          keywords: resumeText.match(/\b(JavaScript|React|Node|Python|Java|SQL|HTML|CSS)\b/gi) || [],
+          missingKeywords: ["Leadership", "Communication", "Problem-solving"],
+          industryMatch: "Technology",
+          recommendations: ["Add quantifiable achievements", "Include relevant certifications"],
+          aiAnalysisNote: "Gemini AI analysis failed, using enhanced fallback"
         };
       }
     }

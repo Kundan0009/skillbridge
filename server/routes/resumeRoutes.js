@@ -1,11 +1,12 @@
 import express from 'express';
 import { analyzeResume, upload, getResumeHistory, getResumeAnalysis, bulkAnalyze } from '../controllers/resumeController.js';
 import { protect, admin, optional } from '../middleware/auth.js';
+import { validateFileUpload } from '../middleware/security.js';
 
 const router = express.Router();
 
 // Public route for resume analysis (with optional auth)
-router.post('/analyze', optional, upload.single('resume'), analyzeResume);
+router.post('/analyze', optional, upload.single('resume'), validateFileUpload, analyzeResume);
 
 // Protected routes
 router.get('/history', protect, getResumeHistory);
