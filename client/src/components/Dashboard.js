@@ -4,14 +4,18 @@ import ResumeUpload from './ResumeUpload';
 import ResumeHistory from './ResumeHistory';
 import AnalysisResults from './AnalysisResults';
 import UserProfile from './UserProfile';
+import Analytics from './Analytics';
+import WelcomeScreen from './WelcomeScreen';
 
 const Dashboard = ({ user, onLogout }) => {
-  const [activeTab, setActiveTab] = useState('upload');
+  const [activeTab, setActiveTab] = useState('welcome');
   const [currentAnalysis, setCurrentAnalysis] = useState(null);
+  const [showWelcome, setShowWelcome] = useState(!localStorage.getItem('hasVisited'));
 
   const tabs = [
     { id: 'upload', name: 'Upload Resume', icon: '📄' },
-    { id: 'history', name: 'History', icon: '📊' },
+    { id: 'analytics', name: 'Analytics', icon: '📊' },
+    { id: 'history', name: 'History', icon: '📋' },
     { id: 'profile', name: 'Profile', icon: '👤' },
     ...(user?.role === 'admin' ? [{ id: 'admin', name: 'Admin Panel', icon: '⚙️' }] : [])
   ];
@@ -92,16 +96,32 @@ const Dashboard = ({ user, onLogout }) => {
           {/* Main Content */}
           <div className="flex-1">
             <div className="bg-white rounded-lg shadow">
+              {activeTab === 'welcome' && showWelcome && (
+                <WelcomeScreen 
+                  user={user} 
+                  onGetStarted={() => {
+                    localStorage.setItem('hasVisited', 'true');
+                    setShowWelcome(false);
+                    setActiveTab('upload');
+                  }}
+                />
+              )}
               {activeTab === 'upload' && (
                 <ResumeUpload 
                   user={user} 
                   onAnalysisComplete={handleAnalysisComplete}
                 />
               )}
+              {activeTab === 'analytics' && (
+                <Analytics user={user} />
+              )}
               {activeTab === 'history' && (
                 <ResumeHistory 
                   user={user}
-                  onViewAnalysis={setCurrentAnalysis}
+                  onViewAnalysis={(analysis) => {
+                    setCurrentAnalysis(analysis);
+                    setActiveTab('results');
+                  }}
                 />
               )}
               {activeTab === 'profile' && (

@@ -10,7 +10,7 @@ export default function ResumeAnalyzer() {
     setFeedback("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/analyze-resume", {
+      const response = await fetch("http://localhost:5000/api/resumes/analyze", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

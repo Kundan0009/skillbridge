@@ -5,6 +5,8 @@ const ResumeUpload = ({ user, onAnalysisComplete }) => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [analysisStep, setAnalysisStep] = useState('');
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -46,6 +48,26 @@ const ResumeUpload = ({ user, onAnalysisComplete }) => {
     }
 
     setLoading(true);
+    setProgress(0);
+    
+    // Simulate progress steps
+    const steps = [
+      { step: 'Uploading file...', progress: 20 },
+      { step: 'Extracting text...', progress: 40 },
+      { step: 'AI Analysis...', progress: 70 },
+      { step: 'Generating insights...', progress: 90 },
+      { step: 'Complete!', progress: 100 }
+    ];
+    
+    let currentStep = 0;
+    const progressInterval = setInterval(() => {
+      if (currentStep < steps.length) {
+        setAnalysisStep(steps[currentStep].step);
+        setProgress(steps[currentStep].progress);
+        currentStep++;
+      }
+    }, 800);
+    
     const formData = new FormData();
     formData.append('resume', file);
 
@@ -58,11 +80,20 @@ const ResumeUpload = ({ user, onAnalysisComplete }) => {
         },
       });
 
+      clearInterval(progressInterval);
+      
       if (response.data.success) {
-        onAnalysisComplete(response.data.analysis);
-        setFile(null);
+        setProgress(100);
+        setAnalysisStep('Analysis Complete! 🎉');
+        setTimeout(() => {
+          onAnalysisComplete(response.data.analysis);
+          setFile(null);
+          setProgress(0);
+          setAnalysisStep('');
+        }, 1000);
       }
     } catch (error) {
+      clearInterval(progressInterval);
       console.error('Upload failed:', error);
       alert('Failed to analyze resume. Please try again.');
     } finally {
@@ -154,6 +185,22 @@ const ResumeUpload = ({ user, onAnalysisComplete }) => {
           </div>
         </div>
 
+        {/* Progress Bar */}
+        {loading && (
+          <div className="bg-blue-50 rounded-lg p-4">
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-blue-800">{analysisStep}</span>
+              <span className="text-blue-600">{progress}%</span>
+            </div>
+            <div className="w-full bg-blue-200 rounded-full h-3">
+              <div 
+                className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
         {/* Submit Button */}
         <button
           type="submit"
@@ -167,7 +214,7 @@ const ResumeUpload = ({ user, onAnalysisComplete }) => {
           {loading ? (
             <div className="flex items-center justify-center">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-              Analyzing Resume...
+              {analysisStep || 'Analyzing Resume...'}
             </div>
           ) : (
             'Analyze Resume'

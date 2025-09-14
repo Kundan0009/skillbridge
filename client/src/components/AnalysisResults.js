@@ -1,5 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
+
+const AnimatedScore = ({ score, duration = 2000 }) => {
+  const [displayScore, setDisplayScore] = useState(0);
+  
+  useEffect(() => {
+    let start = 0;
+    const increment = score / (duration / 16);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= score) {
+        setDisplayScore(score);
+        clearInterval(timer);
+      } else {
+        setDisplayScore(Math.floor(start));
+      }
+    }, 16);
+    
+    return () => clearInterval(timer);
+  }, [score, duration]);
+  
+  return <span>{displayScore}</span>;
+};
 
 const AnalysisResults = ({ analysis }) => {
   const [activeSection, setActiveSection] = useState('overview');
@@ -78,7 +100,7 @@ const AnalysisResults = ({ analysis }) => {
         <div className="bg-white border rounded-lg p-6">
           <h3 className="text-lg font-semibold mb-4">Overall Score</h3>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-2xl font-bold">{analysis.overallScore}/100</span>
+            <span className="text-2xl font-bold"><AnimatedScore score={analysis.overallScore} />/100</span>
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(analysis.overallScore)}`}>
               {analysis.overallScore >= 80 ? 'Excellent' : 
                analysis.overallScore >= 60 ? 'Good' : 'Needs Improvement'}
@@ -95,7 +117,7 @@ const AnalysisResults = ({ analysis }) => {
         <div className="bg-white border rounded-lg p-6">
           <h3 className="text-lg font-semibold mb-4">ATS Compatibility</h3>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-2xl font-bold">{analysis.atsScore}/100</span>
+            <span className="text-2xl font-bold"><AnimatedScore score={analysis.atsScore} />/100</span>
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(analysis.atsScore)}`}>
               {analysis.atsScore >= 80 ? 'ATS Friendly' : 
                analysis.atsScore >= 60 ? 'Moderate' : 'Poor ATS Score'}
