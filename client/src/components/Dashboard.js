@@ -160,7 +160,7 @@ const AdminPanel = () => {
   const [users, setUsers] = useState([]);
   const [dashboardData, setDashboardData] = useState({});
   const [userAnalytics, setUserAnalytics] = useState({});
-  const [selectedUser, setSelectedUser] = useState(null);
+  // const [selectedUser, setSelectedUser] = useState(null); // Removed unused variable
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
 
@@ -357,7 +357,7 @@ const AdminPanel = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <button
-                        onClick={() => setSelectedUser(user)}
+                        onClick={() => console.log('View user:', user)}
                         className="text-blue-600 hover:text-blue-900"
                       >
                         View Details
