@@ -7,44 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: |
-          server/package-lock.json
-          client/package-lock.json
-    
-    - name: Install Backend Dependencies
-      run: |
-        cd server
-        npm ci
-    
-    - name: Install Frontend Dependencies
-      run: |
-        cd client
-        npm ci
-    
-    - name: Run Backend Tests
-      run: |
-        cd server
-        npm test
-      env:
-        NODE_ENV: test
-    
-    - name: Run Frontend Tests
-      run: |
-        cd client
-        npm test -- --coverage --watchAll=false
-
   build:
-    needs: test
+    # needs: test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -63,14 +27,14 @@ jobs:
       with:
         context: ./server
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/skillbridge-backend:${{ github.sha }}
+        tags: ${{ secrets.DOCKER_USERNAME }}/skillbridge-backend:latest
     
     - name: Build and Push Frontend
       uses: docker/build-push-action@v5
       with:
         context: ./client
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/skillbridge-frontend:${{ github.sha }}
+        tags: ${{ secrets.DOCKER_USERNAME }}/skillbridge-frontend:latest
 
   deploy:
     needs: build

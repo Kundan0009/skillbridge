@@ -26,11 +26,16 @@ jobs:
       with:
         images: ${{ secrets.DOCKER_USERNAME }}/skillbridge
     
-    - name: Build and push
+    - name: Build and push Backend
       uses: docker/build-push-action@v5
       with:
-        context: .
-        file: ./Dockerfile
+        context: ./server
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        tags: ${{ secrets.DOCKER_USERNAME }}/skillbridge-backend:latest
+        
+    - name: Build and push Frontend
+      uses: docker/build-push-action@v5
+      with:
+        context: ./client
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/skillbridge-frontend:latest
