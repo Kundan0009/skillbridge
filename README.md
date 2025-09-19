@@ -2,14 +2,6 @@
 
 A comprehensive, AI-powered resume analysis platform designed for college students and career centers. Built with React, Node.js, and Google Gemini AI integration.
 
-## 🌟 Live Demo
-- **Frontend**: http://localhost:4000
-- **Backend API**: http://localhost:5000
-
-## 📸 Screenshots
-![Dashboard](screenshots/dashboard.png)
-![Analysis Results](screenshots/analysis.png)
-![Analytics](screenshots/analytics.png)
 
 ## 🚀 Features
 
