@@ -3,8 +3,8 @@ import axios from 'axios';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 
-// Set axios base URL
-axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+// Set axios base URL - use /api for Docker
+axios.defaults.baseURL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '/api';
 
 // Add token to all requests
 axios.interceptors.request.use(

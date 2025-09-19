@@ -254,6 +254,21 @@ const Auth = ({ onLogin }) => {
             </div>
           </div>
         </div>
+
+        {/* Developer Credit */}
+        <div className="mt-8 text-center">
+          <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-lg p-4 shadow-lg">
+            <p className="text-white text-sm mb-1">Crafted with ❤️ by</p>
+            <p className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 text-xl font-bold tracking-wide">
+              KUNDAN
+            </p>
+            <div className="flex justify-center items-center mt-2 space-x-4 text-gray-300">
+              <span className="text-xs">🚀 Full-Stack Developer</span>
+              <span className="text-xs">•</span>
+              <span className="text-xs">🤖 AI Enthusiast</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

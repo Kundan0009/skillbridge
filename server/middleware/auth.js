@@ -28,6 +28,24 @@ export const admin = (req, res, next) => {
   }
 };
 
+export const counselor = (req, res, next) => {
+  if (req.user && ['admin', 'counselor'].includes(req.user.role)) {
+    next();
+  } else {
+    res.status(403).json({ error: 'Counselor access required' });
+  }
+};
+
+export const requireRole = (roles) => {
+  return (req, res, next) => {
+    if (req.user && roles.includes(req.user.role)) {
+      next();
+    } else {
+      res.status(403).json({ error: `Access denied. Required roles: ${roles.join(', ')}` });
+    }
+  };
+};
+
 export const optional = async (req, res, next) => {
   let token;
 

@@ -9,6 +9,10 @@ import rateLimit from 'express-rate-limit';
 import connectDB from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
 import resumeRoutes from './routes/resumeRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import jdMatcherRoutes from './routes/jdMatcherRoutes.js';
+import interviewBotRoutes from './routes/interviewBotRoutes.js';
+import learningPathRoutes from './routes/learningPathRoutes.js';
 import { sanitizeInputs } from './middleware/security.js';
 
 // Initialize
@@ -42,6 +46,10 @@ app.use(sanitizeInputs);
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/resumes', resumeRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/jd-matcher', jdMatcherRoutes);
+app.use('/api/interview-bot', interviewBotRoutes);
+app.use('/api/learning-path', learningPathRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
