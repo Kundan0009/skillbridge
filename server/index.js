@@ -17,6 +17,17 @@ import { sanitizeInputs } from './middleware/security.js';
 
 // Initialize
 dotenv.config();
+
+// Validate environment variables
+const required = ['GEMINI_API_KEY', 'MONGO_URI', 'JWT_SECRET'];
+for (const key of required) {
+  if (!process.env[key]) {
+    console.error(`❌ Missing required environment variable: ${key}`);
+    process.exit(1);
+  }
+}
+console.log('✅ Environment variables validated');
+
 connectDB();
 const app = express();
 
