@@ -97,8 +97,7 @@ export const analyzeResume = asyncHandler(async (req, res) => {
         analysisPrompt = `You are a resume expert. Provide concise, focused feedback in VALID JSON format only. Prioritize the top 3 most important improvements.`;
         break;
       default:
-        analysisPrompt = `You are an expert resume analyst and career counselor. Analyze this resume and provide detailed feedback in VALID JSON format only. Do not include any text before or after the JSON.`;
-    }
+        analysisPrompt = `You are an expert resume analyst and career counselor. Analyze this resume and provide detailed feedback in VALID JSON format only. Do not include any text before or after the JSON.
 
 Provide analysis in this exact JSON structure:
 {
