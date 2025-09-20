@@ -1,8 +1,9 @@
 import express from 'express';
 import { analyzeResume, upload, getResumeHistory, getResumeAnalysis, bulkAnalyze } from '../controllers/resumeController.js';
 import { protect, admin, optional } from '../middleware/auth.js';
-import { validateFileUpload } from '../middleware/security.js';
+import { validateFileUpload as oldValidateFileUpload } from '../middleware/security.js';
 import { validateUploadedFile } from '../middleware/fileValidation.js';
+import { validateFileUpload } from '../middleware/validation.js';
 import { trackActivity } from '../middleware/activityTracker.js';
 
 const router = express.Router();
