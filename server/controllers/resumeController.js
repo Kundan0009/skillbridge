@@ -4,6 +4,7 @@ import fs from 'fs';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import pdfParse from 'pdf-parse';
 import Resume from '../models/Resume.js';
+import { AppError, ErrorTypes, asyncHandler } from '../middleware/errorHandler.js';
 
 // Initialize Gemini AI
 function initializeGemini() {
@@ -71,11 +72,10 @@ export const upload = multer({
 });
 
 // Advanced resume analysis
-export const analyzeResume = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
+export const analyzeResume = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    throw new AppError('No file uploaded', ErrorTypes.FILE_UPLOAD_ERROR, 400);
+  }
 
     const filePath = req.file.path;
     const dataBuffer = fs.readFileSync(filePath);
@@ -205,67 +205,53 @@ ${resumeText}`;
       analysis: analysis,
     });
 
-  } catch (error) {
-    console.error('Resume analysis error:', error);
-    res.status(500).json({ 
-      error: 'Failed to analyze resume',
-      details: error.message 
-    });
-  }
-};
+});
 
 // Get user's resume history
-export const getResumeHistory = async (req, res) => {
-  try {
-    const resumes = await Resume.find({ userId: req.user.id })
-      .sort({ uploadDate: -1 })
-      .select('filename originalName uploadDate analysis.overallScore');
-    
-    res.json({ resumes });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch resume history' });
-  }
-};
+export const getResumeHistory = asyncHandler(async (req, res) => {
+  const resumes = await Resume.find({ userId: req.user.id })
+    .sort({ uploadDate: -1 })
+    .select('filename originalName uploadDate analysis.overallScore');
+  
+  res.json({ success: true, resumes });
+});
 
 // Get specific resume analysis
-export const getResumeAnalysis = async (req, res) => {
-  try {
-    const resume = await Resume.findById(req.params.id);
-    
-    if (!resume) {
-      return res.status(404).json({ error: 'Resume not found' });
-    }
-
-    // Check if user owns this resume or is admin
-    if (resume.userId && resume.userId.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    res.json({ resume });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch resume analysis' });
+export const getResumeAnalysis = asyncHandler(async (req, res) => {
+  const resume = await Resume.findById(req.params.id);
+  
+  if (!resume) {
+    throw new AppError('Resume not found', ErrorTypes.NOT_FOUND_ERROR, 404);
   }
-};
+
+  // Check if user owns this resume or is admin
+  if (resume.userId && resume.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+    throw new AppError('Access denied to this resume', ErrorTypes.AUTHORIZATION_ERROR, 403);
+  }
+
+  res.json({ success: true, resume });
+});
 
 // Bulk analysis for admin/career center
-export const bulkAnalyze = async (req, res) => {
-  try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    const { resumeIds } = req.body;
-    const resumes = await Resume.find({ _id: { $in: resumeIds } });
-    
-    const summary = {
-      totalResumes: resumes.length,
-      averageScore: resumes.reduce((sum, r) => sum + (r.analysis?.overallScore || 0), 0) / resumes.length,
-      commonIssues: [],
-      topSkills: [],
-    };
-
-    res.json({ summary, resumes });
-  } catch (error) {
-    res.status(500).json({ error: 'Bulk analysis failed' });
+export const bulkAnalyze = asyncHandler(async (req, res) => {
+  if (req.user.role !== 'admin') {
+    throw new AppError('Admin access required for bulk analysis', ErrorTypes.AUTHORIZATION_ERROR, 403);
   }
-};
+
+  const { resumeIds } = req.body;
+  
+  if (!resumeIds || !Array.isArray(resumeIds) || resumeIds.length === 0) {
+    throw new AppError('Resume IDs array is required', ErrorTypes.VALIDATION_ERROR, 400);
+  }
+
+  const resumes = await Resume.find({ _id: { $in: resumeIds } });
+  
+  const summary = {
+    totalResumes: resumes.length,
+    averageScore: resumes.reduce((sum, r) => sum + (r.analysis?.overallScore || 0), 0) / resumes.length,
+    commonIssues: [],
+    topSkills: [],
+  };
+
+  res.json({ success: true, summary, resumes });
+});

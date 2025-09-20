@@ -3,97 +3,88 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import { AppError, ErrorTypes, asyncHandler } from '../middleware/errorHandler.js';
 
 // Generate JWT token
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 
 // @route   POST /api/users/register
-export const registerUser = async (req, res) => {
+export const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, college, department, graduationYear, role } = req.body;
 
-  try {
-    console.log('Registration attempt:', { name, email, role });
-    
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      console.log('User already exists:', email);
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    // Create new user
-    const user = await User.create({
-      name,
-      email,
-      password,
-      college,
-      department,
-      graduationYear,
-      role: role || 'student'
-    });
-
-    console.log('User created successfully:', user._id);
-
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      college: user.college,
-      token: generateToken(user._id),
-    });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ message: "Registration failed", error: error.message });
+  if (!name || !email || !password) {
+    throw new AppError('Name, email, and password are required', ErrorTypes.VALIDATION_ERROR, 400);
   }
-};
+
+  if (password.length < 6) {
+    throw new AppError('Password must be at least 6 characters', ErrorTypes.VALIDATION_ERROR, 400);
+  }
+
+  const userExists = await User.findOne({ email });
+  if (userExists) {
+    throw new AppError('User with this email already exists', ErrorTypes.VALIDATION_ERROR, 400);
+  }
+
+  const user = await User.create({
+    name,
+    email,
+    password,
+    college,
+    department,
+    graduationYear,
+    role: role || 'student'
+  });
+
+  res.status(201).json({
+    success: true,
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    college: user.college,
+    token: generateToken(user._id),
+  });
+});
 
 // @route   POST /api/users/login
-export const loginUser = async (req, res) => {
+export const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  try {
-    console.log('Login attempt:', { email });
-    const user = await User.findOne({ email });
-    
-    if (!user) {
-      console.log('User not found:', email);
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-    
-    const isMatch = await user.matchPassword(password);
-    console.log('Password match:', isMatch);
-    
-    if (isMatch) {
-      console.log('Login successful for:', email);
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        college: user.college,
-        department: user.department,
-        token: generateToken(user._id),
-      });
-    } else {
-      console.log('Invalid password for:', email);
-      res.status(401).json({ message: "Invalid credentials" });
-    }
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: "Login failed", error: error.message });
+  if (!email || !password) {
+    throw new AppError('Email and password are required', ErrorTypes.VALIDATION_ERROR, 400);
   }
-};
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new AppError('Invalid email or password', ErrorTypes.AUTHENTICATION_ERROR, 401);
+  }
+  
+  const isMatch = await user.matchPassword(password);
+  if (!isMatch) {
+    throw new AppError('Invalid email or password', ErrorTypes.AUTHENTICATION_ERROR, 401);
+  }
+
+  res.json({
+    success: true,
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    college: user.college,
+    department: user.department,
+    token: generateToken(user._id),
+  });
+});
 
 // @route   GET /api/users/profile
-export const getUserProfile = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select('-password');
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch profile", error: error.message });
+export const getUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id).select('-password');
+  if (!user) {
+    throw new AppError('User not found', ErrorTypes.NOT_FOUND_ERROR, 404);
   }
-};
+  res.json({ success: true, user });
+});
 
 // @route   PUT /api/users/profile
 export const updateUserProfile = async (req, res) => {
@@ -128,11 +119,7 @@ export const updateUserProfile = async (req, res) => {
 };
 
 // @route   GET /api/users/all (Admin only)
-export const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
-    res.json({ users, total: users.length });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch users", error: error.message });
-  }
-};
+export const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({}).select('-password').sort({ createdAt: -1 });
+  res.json({ success: true, users, total: users.length });
+});

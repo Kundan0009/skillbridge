@@ -15,6 +15,7 @@ import interviewBotRoutes from './routes/interviewBotRoutes.js';
 import learningPathRoutes from './routes/learningPathRoutes.js';
 import { sanitizeInputs } from './middleware/security.js';
 import { cleanupOldFiles } from './middleware/fileValidation.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 // Initialize
 dotenv.config();
@@ -69,13 +70,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    error: 'Something went wrong!',
-    ...(process.env.NODE_ENV === 'development' && { details: err.message })
-  });
-});
+app.use(errorHandler);
 
 // 404 handler
 app.use('*', (req, res) => {
