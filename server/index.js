@@ -13,6 +13,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import jdMatcherRoutes from './routes/jdMatcherRoutes.js';
 import interviewBotRoutes from './routes/interviewBotRoutes.js';
 import learningPathRoutes from './routes/learningPathRoutes.js';
+import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import { sanitizeInputs } from './middleware/security.js';
 import { cleanupOldFiles } from './middleware/fileValidation.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -63,6 +64,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/jd-matcher', jdMatcherRoutes);
 app.use('/api/interview-bot', interviewBotRoutes);
 app.use('/api/learning-path', learningPathRoutes);
+app.use('/api/subscription', subscriptionRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
