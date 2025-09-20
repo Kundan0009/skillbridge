@@ -15,6 +15,7 @@ import interviewBotRoutes from './routes/interviewBotRoutes.js';
 import learningPathRoutes from './routes/learningPathRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
+import experimentRoutes from './routes/experimentRoutes.js';
 import { sanitizeInputs } from './middleware/security.js';
 import { cleanupOldFiles } from './middleware/fileValidation.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -67,6 +68,7 @@ app.use('/api/interview-bot', interviewBotRoutes);
 app.use('/api/learning-path', learningPathRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/experiments', experimentRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

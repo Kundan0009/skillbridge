@@ -85,8 +85,20 @@ export const analyzeResume = asyncHandler(async (req, res) => {
     const pdfData = await pdfParse(dataBuffer);
     const resumeText = pdfData.text;
 
-    // Advanced AI analysis prompt optimized for Gemini
-    const analysisPrompt = `You are an expert resume analyst and career counselor. Analyze this resume and provide detailed feedback in VALID JSON format only. Do not include any text before or after the JSON.
+    // A/B test different analysis prompts
+    const variant = req.abTest?.variant || 'control';
+    let analysisPrompt;
+    
+    switch (variant) {
+      case 'detailed':
+        analysisPrompt = `You are a senior career counselor with 15+ years experience. Provide comprehensive, detailed resume analysis in VALID JSON format only. Focus on specific, actionable improvements.`;
+        break;
+      case 'concise':
+        analysisPrompt = `You are a resume expert. Provide concise, focused feedback in VALID JSON format only. Prioritize the top 3 most important improvements.`;
+        break;
+      default:
+        analysisPrompt = `You are an expert resume analyst and career counselor. Analyze this resume and provide detailed feedback in VALID JSON format only. Do not include any text before or after the JSON.`;
+    }
 
 Provide analysis in this exact JSON structure:
 {
@@ -209,6 +221,13 @@ ${resumeText}`;
       true,
       req.file.size
     );
+    
+    // Record A/B test metrics
+    if (req.abTest) {
+      req.abTest.recordMetric('completion_rate', 1);
+      req.abTest.recordMetric('analysis_duration', duration);
+      req.abTest.recordMetric('overall_score', analysis.overallScore);
+    }
 
     res.json({
       success: true,
