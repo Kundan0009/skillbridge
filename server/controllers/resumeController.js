@@ -36,13 +36,38 @@ const storage = multer.diskStorage({
 export const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF files are allowed'), false);
+    // Strict file validation
+    const allowedMimes = ['application/pdf'];
+    const allowedExtensions = ['.pdf'];
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    
+    // Check MIME type
+    if (!allowedMimes.includes(file.mimetype)) {
+      return cb(new Error('Invalid file type. Only PDF files are allowed.'), false);
     }
+    
+    // Check file extension
+    if (!allowedExtensions.includes(fileExtension)) {
+      return cb(new Error('Invalid file extension. Only .pdf files are allowed.'), false);
+    }
+    
+    // Check filename for malicious patterns
+    if (/[<>:"/\\|?*\x00-\x1f]/.test(file.originalname)) {
+      return cb(new Error('Invalid filename characters detected.'), false);
+    }
+    
+    // Check filename length
+    if (file.originalname.length > 255) {
+      return cb(new Error('Filename too long. Maximum 255 characters allowed.'), false);
+    }
+    
+    cb(null, true);
   },
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { 
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+    files: 1, // Only 1 file per request
+    fieldSize: 1024 * 1024 // 1MB field size limit
+  }
 });
 
 // Advanced resume analysis

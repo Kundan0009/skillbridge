@@ -14,6 +14,7 @@ import jdMatcherRoutes from './routes/jdMatcherRoutes.js';
 import interviewBotRoutes from './routes/interviewBotRoutes.js';
 import learningPathRoutes from './routes/learningPathRoutes.js';
 import { sanitizeInputs } from './middleware/security.js';
+import { cleanupOldFiles } from './middleware/fileValidation.js';
 
 // Initialize
 dotenv.config();
@@ -81,9 +82,13 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
+// File cleanup scheduler (every 6 hours)
+setInterval(cleanupOldFiles, 6 * 60 * 60 * 1000);
+
 // Server
 const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🧹 File cleanup scheduled every 6 hours`);
 });
