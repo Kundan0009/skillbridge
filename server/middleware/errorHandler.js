@@ -27,11 +27,15 @@ export const errorHandler = (err, req, res, next) => {
   let error = { ...err };
   error.message = err.message;
 
-  // Log error for debugging
-  console.error(`Error ${err.type || 'UNKNOWN'}: ${err.message}`);
-  if (process.env.NODE_ENV === 'development') {
-    console.error(err.stack);
-  }
+  // Import logger dynamically to avoid circular dependency
+  import('./logger.js').then(({ performanceLogger }) => {
+    performanceLogger.logError(err, {
+      url: req.url,
+      method: req.method,
+      userId: req.user?.id,
+      ip: req.ip
+    });
+  });
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {

@@ -17,6 +17,7 @@ import { sanitizeInputs } from './middleware/security.js';
 import { cleanupOldFiles } from './middleware/fileValidation.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { userRateLimit } from './middleware/rateLimiting.js';
+import { logger, requestLogger } from './middleware/logger.js';
 
 // Initialize
 dotenv.config();
@@ -29,7 +30,7 @@ for (const key of required) {
     process.exit(1);
   }
 }
-console.log('✅ Environment variables validated');
+logger.info('Environment variables validated');
 
 connectDB();
 const app = express();
@@ -48,6 +49,9 @@ app.use(cors({
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Request logging
+app.use(requestLogger);
 
 // Security middleware
 app.use(sanitizeInputs);
@@ -79,7 +83,9 @@ setInterval(cleanupOldFiles, 6 * 60 * 60 * 1000);
 // Server
 const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🧹 File cleanup scheduled every 6 hours`);
+  logger.info(`Server started on port ${PORT}`, {
+    port: PORT,
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString()
+  });
 });

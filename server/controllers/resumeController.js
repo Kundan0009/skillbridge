@@ -5,6 +5,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import pdfParse from 'pdf-parse';
 import Resume from '../models/Resume.js';
 import { AppError, ErrorTypes, asyncHandler } from '../middleware/errorHandler.js';
+import { performanceLogger } from '../middleware/logger.js';
 
 // Initialize Gemini AI
 function initializeGemini() {
@@ -73,6 +74,8 @@ export const upload = multer({
 
 // Advanced resume analysis
 export const analyzeResume = asyncHandler(async (req, res) => {
+  const startTime = Date.now();
+  
   if (!req.file) {
     throw new AppError('No file uploaded', ErrorTypes.FILE_UPLOAD_ERROR, 400);
   }
@@ -198,6 +201,14 @@ ${resumeText}`;
 
     // Clean up uploaded file
     fs.unlinkSync(filePath);
+
+    const duration = Date.now() - startTime;
+    performanceLogger.logAnalysis(
+      req.user?.id || 'anonymous',
+      duration,
+      true,
+      req.file.size
+    );
 
     res.json({
       success: true,
