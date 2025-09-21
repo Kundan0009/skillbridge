@@ -1,9 +1,7 @@
 export default {
   testEnvironment: 'node',
-  preset: '@babel/preset-env',
-  transform: {
-    '^.+\.js$': 'babel-jest'
-  },
+  extensionsToTreatAsEsm: ['.js'],
+  transform: {},
   testMatch: [
     '**/tests/**/*.test.js'
   ],
@@ -14,11 +12,5 @@ export default {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
-  extensionsToTreatAsEsm: ['.js'],
-  globals: {
-    'ts-jest': {
-      useESM: true
-    }
-  }
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js']
 };
