@@ -1,16 +1,11 @@
 export default {
   testEnvironment: 'node',
-  extensionsToTreatAsEsm: ['.js'],
   transform: {},
-  testMatch: [
-    '**/tests/**/*.test.js'
-  ],
+  moduleFileExtensions: ['js'],
+  testMatch: ['**/__tests__/**/*.js', '**/?(*.)+(spec|test).js'],
   collectCoverageFrom: [
-    'src/**/*.js',
-    '!src/**/*.test.js',
-    '!src/config/**'
-  ],
-  coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.js']
+    '**/*.js',
+    '!**/node_modules/**',
+    '!**/coverage/**'
+  ]
 };
