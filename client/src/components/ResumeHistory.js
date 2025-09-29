@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api.js';
 
 const ResumeHistory = ({ user, onViewAnalysis }) => {
   const [resumes, setResumes] = useState([]);
@@ -12,10 +12,7 @@ const ResumeHistory = ({ user, onViewAnalysis }) => {
 
   const fetchResumeHistory = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/resumes/history', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/api/resumes/history');
       setResumes(response.data.resumes);
     } catch (error) {
       setError('Failed to fetch resume history');
@@ -27,10 +24,7 @@ const ResumeHistory = ({ user, onViewAnalysis }) => {
 
   const handleViewAnalysis = async (resumeId) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/resumes/${resumeId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get(`/api/resumes/${resumeId}`);
       onViewAnalysis(response.data.resume.analysis);
     } catch (error) {
       console.error('Error fetching resume analysis:', error);

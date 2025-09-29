@@ -27,9 +27,7 @@ export const validateRegistration = [
   
   body('password')
     .isLength({ min: 6, max: 128 })
-    .withMessage('Password must be 6-128 characters')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Password must contain uppercase, lowercase, and number'),
+    .withMessage('Password must be at least 6 characters'),
   
   body('college')
     .optional()

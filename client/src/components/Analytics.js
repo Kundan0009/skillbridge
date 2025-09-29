@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api.js';
 
 const Analytics = ({ user }) => {
   const [analytics, setAnalytics] = useState({
@@ -16,10 +16,7 @@ const Analytics = ({ user }) => {
 
   const fetchAnalytics = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/resumes/history', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/api/resumes/history');
       
       const resumes = response.data.resumes;
       if (resumes.length > 0) {

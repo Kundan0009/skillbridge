@@ -9,11 +9,13 @@ import WelcomeScreen from './WelcomeScreen';
 import JDMatcher from './JDMatcher';
 import InterviewBot from './InterviewBot';
 import LearningPath from './LearningPath';
+import SessionTimeout from './SessionTimeout';
 
 const Dashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('welcome');
   const [currentAnalysis, setCurrentAnalysis] = useState(null);
   const [showWelcome, setShowWelcome] = useState(!localStorage.getItem('hasVisited'));
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const tabs = [
     { id: 'upload', name: 'Resume Analyzer', icon: '📄' },
@@ -32,54 +34,113 @@ const Dashboard = ({ user, onLogout }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative">
+      {/* Career Success Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-10 left-10 text-6xl">📈</div>
+        <div className="absolute top-20 right-20 text-4xl">🎯</div>
+        <div className="absolute bottom-20 left-20 text-5xl">🚀</div>
+        <div className="absolute bottom-10 right-10 text-4xl">🏆</div>
+        <div className="absolute top-1/2 left-1/2 text-3xl">💼</div>
+      </div>
+      <SessionTimeout onLogout={onLogout} />
+      
+      {/* Career Growth Elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 opacity-20"></div>
+      </div>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">SkillBridge</h1>
-              <span className="ml-2 text-sm text-gray-500">Resume Analyzer</span>
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="lg:hidden mr-3 p-2 rounded-md text-gray-600 hover:bg-gray-100"
+              >
+                <span className="text-xl">{sidebarOpen ? '✕' : '☰'}</span>
+              </button>
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">S</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">SkillBridge</h1>
+                  <span className="text-xs text-gray-500">AI Resume Analyzer</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
-                Welcome, {user?.name}
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className="text-right hidden sm:block">
+                <div className="text-sm font-medium text-gray-800">Welcome, {user?.name}</div>
                 {user?.college && (
-                  <span className="text-gray-500"> • {user.college}</span>
+                  <div className="text-xs text-gray-500">{user.college}</div>
                 )}
-              </span>
+              </div>
               <button
                 onClick={onLogout}
-                className="bg-red-600 text-white px-4 py-2 rounded-md text-sm hover:bg-red-700"
+                className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-2 sm:px-4 rounded-lg text-xs sm:text-sm hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-md"
               >
-                Logout
+                <span className="hidden sm:inline">Logout</span>
+                <span className="sm:hidden">🚪</span>
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+          {/* Mobile sidebar overlay */}
+          {sidebarOpen && (
+            <div 
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+          
           {/* Sidebar */}
-          <div className="lg:w-64">
-            <nav className="bg-white rounded-lg shadow p-4">
+          <div className={`lg:w-64 ${
+            sidebarOpen 
+              ? 'fixed top-0 left-0 h-full w-80 z-50 transform translate-x-0 lg:relative lg:translate-x-0 lg:z-auto'
+              : 'hidden lg:block'
+          } transition-transform duration-300 ease-in-out`}>
+            <nav className="bg-white/90 backdrop-blur-md rounded-xl shadow-xl border border-white/20 p-4 h-full lg:h-auto overflow-y-auto">
               <ul className="space-y-2">
                 {tabs.map((tab) => (
                   <li key={tab.id}>
                     <button
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center px-4 py-2 text-left rounded-md transition-colors ${
+                      onClick={() => {
+                        setActiveTab(tab.id);
+                        setSidebarOpen(false);
+                      }}
+                      className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-200 ${
                         activeTab === tab.id
-                          ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-500'
-                          : 'text-gray-700 hover:bg-gray-100'
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg transform scale-105'
+                          : 'text-gray-700 hover:bg-white/50 hover:shadow-md'
                       }`}
                     >
-                      <span className="mr-3">{tab.icon}</span>
-                      {tab.name}
+                      <span className="mr-3 text-lg">{tab.icon}</span>
+                      <span className="font-medium">{tab.name}</span>
                     </button>
                   </li>
                 ))}
+                {currentAnalysis && (
+                  <li>
+                    <button
+                      onClick={() => setActiveTab('results')}
+                      className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-200 ${
+                        activeTab === 'results'
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg transform scale-105'
+                          : 'text-gray-700 hover:bg-white/50 hover:shadow-md'
+                      }`}
+                    >
+                      <span className="mr-3 text-lg">📈</span>
+                      <span className="font-medium">Latest Results</span>
+                    </button>
+                  </li>
+                )}
                 {currentAnalysis && (
                   <li>
                     <button
@@ -101,7 +162,7 @@ const Dashboard = ({ user, onLogout }) => {
 
           {/* Main Content */}
           <div className="flex-1">
-            <div className="bg-white rounded-lg shadow">
+            <div className="bg-white/70 backdrop-blur-md rounded-xl shadow-xl border border-white/20">
               {activeTab === 'welcome' && showWelcome && (
                 <WelcomeScreen 
                   user={user} 

@@ -3,11 +3,18 @@ import mongoose from 'mongoose';
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/skillbridge');
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    console.log('🔄 Connecting to MongoDB...');
+    const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/skillbridge', {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    console.log('✅ MongoDB Connected Successfully!');
+    console.log(`📍 Host: ${conn.connection.host}`);
+    console.log(`🗄️  Database: ${conn.connection.name}`);
   } catch (error) {
+    console.error('❌ MongoDB Connection Failed!');
     console.error(`❌ Error: ${error.message}`);
-    process.exit(1); // Exit on failure
+    console.log('⚠️  Continuing without database...');
   }
 };
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 
 const InterviewBot = () => {
   const [sessionId, setSessionId] = useState(null);
@@ -16,7 +16,7 @@ const InterviewBot = () => {
   const startInterview = async () => {
     setLoading(true);
     try {
-      const response = await axios.post('/api/interview-bot/start', interviewSettings);
+      const response = await api.post('/api/interview-bot/start', interviewSettings);
       setSessionId(response.data.sessionId);
       setMessages([{
         type: 'bot',
@@ -46,7 +46,7 @@ const InterviewBot = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/interview-bot/continue', {
+      const response = await api.post('/api/interview-bot/continue', {
         sessionId,
         userResponse: currentMessage,
         questionCount: messages.filter(m => m.type === 'bot').length
@@ -84,7 +84,7 @@ const InterviewBot = () => {
 
   const endInterview = async () => {
     try {
-      await axios.post('/api/interview-bot/end', { sessionId });
+      await api.post('/api/interview-bot/end', { sessionId });
       setInterviewStarted(false);
       setSessionId(null);
       setMessages([]);

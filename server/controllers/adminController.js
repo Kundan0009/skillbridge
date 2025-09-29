@@ -7,25 +7,38 @@ export const getAdminDashboard = async (req, res) => {
     const [
       totalUsers,
       totalResumes,
-      recentActivities,
       userStats,
       aiUsageStats
     ] = await Promise.all([
       User.countDocuments(),
       Resume.countDocuments(),
-      UserActivity.find().sort({ timestamp: -1 }).limit(10).populate('userId', 'name email'),
       getUserStatistics(),
       getAIUsageStatistics()
     ]);
 
+    // Get recent activities (simplified)
+    const recentActivities = await Resume.find()
+      .sort({ uploadDate: -1 })
+      .limit(5)
+      .populate('userId', 'name email')
+      .select('userId uploadDate originalName');
+
+    const formattedActivities = recentActivities.map(resume => ({
+      userId: resume.userId,
+      action: 'resume_analysis',
+      timestamp: resume.uploadDate,
+      details: { filename: resume.originalName }
+    }));
+
     res.json({
       totalUsers,
       totalResumes,
-      recentActivities,
+      recentActivities: formattedActivities,
       userStats,
       aiUsageStats
     });
   } catch (error) {
+    console.error('Admin dashboard error:', error);
     res.status(500).json({ error: 'Failed to fetch admin dashboard data' });
   }
 };
@@ -36,28 +49,14 @@ export const getUserAnalytics = async (req, res) => {
     const days = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : 90;
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-    const analytics = await UserActivity.aggregate([
-      { $match: { timestamp: { $gte: startDate } } },
-      {
-        $group: {
-          _id: {
-            action: '$action',
-            date: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } }
-          },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { '_id.date': 1 } }
-    ]);
-
-    const userEngagement = await UserActivity.aggregate([
-      { $match: { timestamp: { $gte: startDate } } },
+    // Simplified analytics based on resume uploads
+    const userEngagement = await Resume.aggregate([
+      { $match: { uploadDate: { $gte: startDate } } },
       {
         $group: {
           _id: '$userId',
           totalActions: { $sum: 1 },
-          lastActivity: { $max: '$timestamp' },
-          actions: { $addToSet: '$action' }
+          lastActivity: { $max: '$uploadDate' }
         }
       },
       {
@@ -74,16 +73,16 @@ export const getUserAnalytics = async (req, res) => {
           name: '$user.name',
           email: '$user.email',
           totalActions: 1,
-          lastActivity: 1,
-          actionTypes: { $size: '$actions' }
+          lastActivity: 1
         }
       },
       { $sort: { totalActions: -1 } },
       { $limit: 20 }
     ]);
 
-    res.json({ analytics, userEngagement });
+    res.json({ userEngagement });
   } catch (error) {
+    console.error('User analytics error:', error);
     res.status(500).json({ error: 'Failed to fetch user analytics' });
   }
 };
@@ -147,7 +146,7 @@ async function getUserStatistics() {
   
   const [newUsers, activeUsers, roleDistribution] = await Promise.all([
     User.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }),
-    UserActivity.distinct('userId', { timestamp: { $gte: thirtyDaysAgo } }).then(ids => ids.length),
+    Resume.distinct('userId', { uploadDate: { $gte: thirtyDaysAgo } }).then(ids => ids.length),
     User.aggregate([
       { $group: { _id: '$role', count: { $sum: 1 } } }
     ])

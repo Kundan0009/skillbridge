@@ -1,22 +1,38 @@
 import fs from 'fs';
 import path from 'path';
 
+// Safe path resolution to prevent path traversal
+const resolveSafePath = (basePath, userPath) => {
+  const resolved = path.resolve(basePath, userPath);
+  const normalized = path.normalize(resolved);
+  
+  // Ensure the resolved path is within the base directory
+  if (!normalized.startsWith(path.resolve(basePath))) {
+    throw new Error('Path traversal attempt detected');
+  }
+  
+  return normalized;
+};
+
 // Advanced file validation middleware
 export const validateUploadedFile = (req, res, next) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  const filePath = req.file.path;
-  
   try {
+    // Validate and sanitize file path
+    const uploadsDir = path.resolve('./uploads');
+    const safePath = resolveSafePath(uploadsDir, path.basename(req.file.path));
+    
     // Check if file exists
-    if (!fs.existsSync(filePath)) {
+    if (!fs.existsSync(safePath)) {
       return res.status(400).json({ error: 'File upload failed' });
     }
 
     // Get file stats
-    const stats = fs.statSync(filePath);
+    const stats = fs.statSync(safePath);
+    const filePath = safePath;
     
     // Validate file size (double-check)
     if (stats.size > 5 * 1024 * 1024) {
@@ -60,7 +76,7 @@ export const validateUploadedFile = (req, res, next) => {
 
 // Clean up old uploaded files (run periodically)
 export const cleanupOldFiles = () => {
-  const uploadsDir = 'uploads/';
+  const uploadsDir = path.resolve('./uploads');
   const maxAge = 24 * 60 * 60 * 1000; // 24 hours
 
   try {
@@ -68,12 +84,14 @@ export const cleanupOldFiles = () => {
     const now = Date.now();
 
     files.forEach(file => {
-      const filePath = path.join(uploadsDir, file);
-      const stats = fs.statSync(filePath);
+      // Sanitize filename and create safe path
+      const sanitizedFile = path.basename(file);
+      const safePath = resolveSafePath(uploadsDir, sanitizedFile);
+      const stats = fs.statSync(safePath);
       
       if (now - stats.mtime.getTime() > maxAge) {
-        fs.unlinkSync(filePath);
-        console.log(`Cleaned up old file: ${file}`);
+        fs.unlinkSync(safePath);
+        console.log(`Cleaned up old file: ${sanitizedFile}`);
       }
     });
   } catch (error) {

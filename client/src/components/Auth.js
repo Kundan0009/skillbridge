@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api.js';
+import ForgotPassword from './ForgotPassword';
 
 const Auth = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -33,7 +35,11 @@ const Auth = ({ onLogin }) => {
         ? { email: formData.email, password: formData.password }
         : formData;
 
-      const response = await axios.post(endpoint, payload);
+      console.log('Attempting auth:', endpoint, payload);
+      
+      const response = await api.post(endpoint, payload);
+      
+      console.log('Auth response:', response.data);
       
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
@@ -41,27 +47,58 @@ const Auth = ({ onLogin }) => {
         onLogin(response.data);
       }
     } catch (error) {
-      setError(error.response?.data?.message || 'Authentication failed');
+      console.error('Auth error:', error);
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || 'Authentication failed';
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Career Growth Background */}
+      <div className="absolute inset-0">
+        {/* Success Path Lines */}
+        <div className="absolute top-1/4 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-400 to-transparent opacity-30 animate-pulse"></div>
+        <div className="absolute top-1/2 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-40 animate-pulse animation-delay-1000"></div>
+        <div className="absolute top-3/4 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent opacity-30 animate-pulse animation-delay-2000"></div>
+        
+        {/* Career Icons */}
+        <div className="absolute top-20 left-10 text-4xl opacity-20 animate-bounce animation-delay-500">📄</div>
+        <div className="absolute top-32 right-20 text-3xl opacity-25 animate-bounce animation-delay-1500">🎯</div>
+        <div className="absolute bottom-40 left-16 text-5xl opacity-15 animate-bounce animation-delay-3000">🚀</div>
+        <div className="absolute bottom-20 right-10 text-4xl opacity-20 animate-bounce animation-delay-2500">💼</div>
+        <div className="absolute top-1/2 left-1/4 text-3xl opacity-15 animate-bounce animation-delay-4000">📈</div>
+        <div className="absolute top-1/3 right-1/3 text-4xl opacity-20 animate-bounce animation-delay-1000">🏆</div>
+      </div>
+      <div className="max-w-md w-full space-y-8 relative z-10">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">SkillBridge</h1>
-          <h2 className="text-xl text-gray-600 mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center shadow-2xl">
+              <span className="text-white font-bold text-2xl">S</span>
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold text-white mb-2">SkillBridge</h1>
+          <h2 className="text-xl text-blue-100 mb-8">
             {isLogin ? 'Sign in to your account' : 'Create your account'}
           </h2>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-white/20">
+          {showForgotPassword ? (
+            <ForgotPassword onBack={() => setShowForgotPassword(false)} />
+          ) : (
+            <>
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                {error}
+              <div className="bg-gradient-to-r from-red-500/20 to-pink-500/20 backdrop-blur-md border border-red-400/40 text-red-100 px-6 py-4 rounded-2xl shadow-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">!</span>
+                  </div>
+                  <span className="font-medium">{error}</span>
+                </div>
               </div>
             )}
 
@@ -82,7 +119,7 @@ const Auth = ({ onLogin }) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       College/University
@@ -111,7 +148,7 @@ const Auth = ({ onLogin }) => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Graduation Year
@@ -171,9 +208,11 @@ const Auth = ({ onLogin }) => {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                minLength="6"
+                minLength="8"
+                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                title="Password must contain at least 8 characters with uppercase, lowercase, number, and special character"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter your password"
+                placeholder="Strong password (8+ chars, A-z, 0-9, @$!%*?&)"
               />
             </div>
 
@@ -197,59 +236,72 @@ const Auth = ({ onLogin }) => {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setError('');
-                setFormData({
-                  name: '',
-                  email: '',
-                  password: '',
-                  college: '',
-                  department: '',
-                  graduationYear: '',
-                  role: 'student'
-                });
-              }}
-              className="text-blue-600 hover:text-blue-500 font-medium"
-            >
-              {isLogin 
-                ? "Don't have an account? Sign up" 
-                : "Already have an account? Sign in"
-              }
-            </button>
-          </div>
+              <div className="mt-6 text-center space-y-3">
+                {isLogin && (
+                  <button
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-blue-200 hover:text-white text-sm transition-colors duration-200"
+                  >
+                    Forgot your password?
+                  </button>
+                )}
+                <div>
+                  <button
+                    onClick={() => {
+                      setIsLogin(!isLogin);
+                      setError('');
+                      setFormData({
+                        name: '',
+                        email: '',
+                        password: '',
+                        college: '',
+                        department: '',
+                        graduationYear: '',
+                        role: 'student'
+                      });
+                    }}
+                    className="text-blue-200 hover:text-white font-medium transition-colors duration-200"
+                  >
+                    {isLogin 
+                      ? "Don't have an account? Sign up" 
+                      : "Already have an account? Sign in"
+                    }
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Features Preview */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mt-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            🚀 What you'll get with SkillBridge
+        {/* Career Success Features */}
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl p-6 mt-8 border border-white/20">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+            <span className="mr-2">🚀</span>
+            Your Career Growth Journey Starts Here
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center">
-              <span className="text-green-500 mr-2">✓</span>
+            <div className="flex items-center text-green-200">
+              <span className="text-green-400 mr-2">📊</span>
               AI-Powered Resume Analysis
             </div>
-            <div className="flex items-center">
-              <span className="text-green-500 mr-2">✓</span>
+            <div className="flex items-center text-blue-200">
+              <span className="text-blue-400 mr-2">🎯</span>
               ATS Compatibility Check
             </div>
-            <div className="flex items-center">
-              <span className="text-green-500 mr-2">✓</span>
-              Personalized Recommendations
+            <div className="flex items-center text-purple-200">
+              <span className="text-purple-400 mr-2">💡</span>
+              Personalized Career Recommendations
             </div>
-            <div className="flex items-center">
-              <span className="text-green-500 mr-2">✓</span>
+            <div className="flex items-center text-yellow-200">
+              <span className="text-yellow-400 mr-2">📈</span>
               Skills Gap Analysis
             </div>
-            <div className="flex items-center">
-              <span className="text-green-500 mr-2">✓</span>
-              Resume History & Tracking
+            <div className="flex items-center text-pink-200">
+              <span className="text-pink-400 mr-2">📋</span>
+              Resume Progress Tracking
             </div>
-            <div className="flex items-center">
-              <span className="text-green-500 mr-2">✓</span>
+            <div className="flex items-center text-indigo-200">
+              <span className="text-indigo-400 mr-2">🏢</span>
               Industry-Specific Insights
             </div>
           </div>

@@ -41,13 +41,23 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
-// Per-user rate limiting
-app.use(userRateLimit);
+// Rate limiting disabled for development
+if (process.env.NODE_ENV === 'production') {
+  app.use(userRateLimit);
+}
 
 // CORS configuration
+const allowedOrigins = [
+  'http://localhost:4000',
+  'http://localhost:3000',
+  process.env.CLIENT_URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: [process.env.CLIENT_URL || 'http://localhost:4000', 'http://localhost:3000'],
-  credentials: true
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']
 }));
 
 app.use(express.json({ limit: '10mb' }));
@@ -58,6 +68,26 @@ app.use(requestLogger);
 
 // Security middleware
 app.use(sanitizeInputs);
+
+// CSRF protection disabled for development
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.method === 'GET' || req.path === '/api/health') {
+      return next();
+    }
+    const referer = req.get('Referer') || req.get('Origin');
+    if (referer && allowedOrigins.some(origin => referer.startsWith(origin))) {
+      return next();
+    }
+    return res.status(403).json({ error: 'CSRF protection: Invalid origin' });
+  });
+}
+
+// Debug middleware
+app.use('/api/users', (req, res, next) => {
+  console.log(`USER ROUTE: ${req.method} ${req.path}`);
+  next();
+});
 
 // Routes
 app.use('/api/users', userRoutes);
@@ -70,9 +100,19 @@ app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/experiments', experimentRoutes);
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ message: 'SkillBridge API Server', status: 'Running' });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Test route
+app.post('/api/test', (req, res) => {
+  res.json({ success: true, message: 'Server working', body: req.body });
 });
 
 // Error handling middleware
@@ -89,9 +129,19 @@ setInterval(cleanupOldFiles, 6 * 60 * 60 * 1000);
 // Server
 const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {
+  console.log('\n' + '='.repeat(50));
+  console.log('🚀 SKILLBRIDGE SERVER STARTED!');
+  console.log('='.repeat(50));
+  console.log(`📍 URL: http://localhost:${PORT}`);
+  console.log(`📊 ENV: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🍃 MongoDB: ${process.env.MONGO_URI ? '✅ Connected' : '❌ Not configured'}`);
+  console.log(`🤖 Gemini: ${process.env.GEMINI_API_KEY ? '✅ Ready' : '❌ Missing'}`);
+  console.log('='.repeat(50));
+  console.log('✅ READY TO ACCEPT REQUESTS!');
+  console.log('='.repeat(50) + '\n');
+  
   logger.info(`Server started on port ${PORT}`, {
     port: PORT,
-    environment: process.env.NODE_ENV || 'development',
-    timestamp: new Date().toISOString()
+    environment: process.env.NODE_ENV || 'development'
   });
 });

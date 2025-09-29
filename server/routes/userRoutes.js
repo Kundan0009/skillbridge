@@ -1,7 +1,7 @@
 // routes/userRoutes.js
 
 import express from 'express';
-import { registerUser, loginUser, getUserProfile, updateUserProfile, getAllUsers } from '../controllers/userController.js';
+import { registerUser, loginUser, getUserProfile, updateUserProfile, getAllUsers, forgotPassword, resetPassword } from '../controllers/userController.js';
 import { protect, admin } from '../middleware/auth.js';
 import { validateRegister, validateLogin, checkValidation } from '../middleware/security.js';
 import { validateRegistration, validateLogin as newValidateLogin, validateProfileUpdate } from '../middleware/validation.js';
@@ -10,9 +10,14 @@ import { trackActivity } from '../middleware/activityTracker.js';
 
 const router = express.Router();
 
+// Test route
+router.post('/test', (req, res) => res.json({ success: true, message: 'Server working' }));
+
 // Public routes
-router.post('/register', authRateLimit, validateRegistration, registerUser);
-router.post('/login', authRateLimit, newValidateLogin, trackActivity('login'), loginUser);
+router.post('/register', registerUser);
+router.post('/login', loginUser);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 // Protected routes
 router.get('/profile', protect, trackActivity('dashboard_view'), getUserProfile);

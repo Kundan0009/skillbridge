@@ -1,22 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
-
-// Set axios base URL - always use relative paths for security
-axios.defaults.baseURL = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : '';
-
-// Add token to all requests
-axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+import NetworkStatus from './components/NetworkStatus';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -58,7 +43,8 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+      <NetworkStatus />
       {user ? (
         <Dashboard user={user} onLogout={handleLogout} />
       ) : (

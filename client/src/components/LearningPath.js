@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 
 const LearningPath = () => {
   const [resumeText, setResumeText] = useState('');
@@ -17,7 +17,7 @@ const LearningPath = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post('/api/learning-path/generate', {
+      const response = await api.post('/api/learning-path/generate', {
         resumeText,
         targetRole,
         currentLevel,

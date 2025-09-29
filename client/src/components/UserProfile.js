@@ -78,13 +78,18 @@ const UserProfile = ({ user }) => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">User Profile</h2>
+    <div className="p-8 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 min-h-screen">
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+            <span className="text-white text-xl">👤</span>
+          </div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">User Profile</h2>
+        </div>
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
             Edit Profile
           </button>
@@ -92,18 +97,29 @@ const UserProfile = ({ user }) => {
       </div>
 
       {message && (
-        <div className={`mb-6 p-4 rounded-md ${
+        <div className={`mb-8 p-6 rounded-2xl backdrop-blur-md shadow-lg ${
           message.includes('successfully') 
-            ? 'bg-green-50 text-green-700 border border-green-200'
-            : 'bg-red-50 text-red-700 border border-red-200'
+            ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-800 border border-green-400/40'
+            : 'bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-800 border border-red-400/40'
         }`}>
-          {message}
+          <div className="flex items-center justify-center space-x-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              message.includes('successfully')
+                ? 'bg-green-500 text-white'
+                : 'bg-red-500 text-white'
+            }`}>
+              <span className="text-sm font-bold">
+                {message.includes('successfully') ? '✓' : '!'}
+              </span>
+            </div>
+            <span className="font-medium">{message}</span>
+          </div>
         </div>
       )}
 
-      <div className="bg-white border rounded-lg">
+      <div className="bg-white/70 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
         {/* Profile Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-32 rounded-t-lg relative">
+        <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-40 relative">
           <div className="absolute -bottom-12 left-6">
             <div className="w-24 h-24 bg-white rounded-full border-4 border-white flex items-center justify-center">
               <span className="text-3xl font-bold text-gray-600">
@@ -117,7 +133,7 @@ const UserProfile = ({ user }) => {
           {isEditing ? (
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Full Name
@@ -216,7 +232,7 @@ const UserProfile = ({ user }) => {
               </div>
 
               {/* Social Links */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     LinkedIn Profile
@@ -286,7 +302,7 @@ const UserProfile = ({ user }) => {
               </div>
 
               {/* Academic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
                   <h4 className="font-medium text-gray-900">College</h4>
                   <p className="text-gray-600">{user?.college || 'Not specified'}</p>
