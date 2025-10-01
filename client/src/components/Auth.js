@@ -36,6 +36,7 @@ const Auth = ({ onLogin }) => {
         : formData;
 
       console.log('Attempting auth:', endpoint, payload);
+      console.log('API Base URL:', api.defaults.baseURL);
       
       const response = await api.post(endpoint, payload);
       
@@ -47,8 +48,22 @@ const Auth = ({ onLogin }) => {
         onLogin(response.data);
       }
     } catch (error) {
-      console.error('Auth error:', error);
-      const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || 'Authentication failed';
+      console.error('Auth error details:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config
+      });
+      
+      let errorMsg = 'Network Error';
+      if (error.response) {
+        errorMsg = error.response.data?.message || error.response.data?.error || `Server Error: ${error.response.status}`;
+      } else if (error.request) {
+        errorMsg = 'Cannot connect to server. Check if backend is running.';
+      } else {
+        errorMsg = error.message;
+      }
       setError(errorMsg);
     } finally {
       setLoading(false);

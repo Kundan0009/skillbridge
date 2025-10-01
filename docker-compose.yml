@@ -29,7 +29,7 @@ services:
       - "5000:5000"
     environment:
       - NODE_ENV=development
-      - MONGO_URI=mongodb://admin:${MONGO_ROOT_PASSWORD:-admin123}@mongodb:27017/skillbridge?authSource=admin
+      - MONGO_URI=mongodb+srv://kundan95705:P0Jmrz83n4fFoLGp@cluster2.8sdrr45.mongodb.net/?retryWrites=true&w=majority&appName=Cluster2
       - GEMINI_API_KEY=${GEMINI_API_KEY:-AIzaSyAwRubBnj2hvUgPhvqLACIuIMRe1yL_NAs}
       - JWT_SECRET=${JWT_SECRET:-sk8f9j2k3l4m5n6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2z3}
       - CLIENT_URL=http://localhost:4000
@@ -37,9 +37,7 @@ services:
     volumes:
       - ./server/uploads:/app/uploads
       - ./server/logs:/app/logs
-    depends_on:
-      mongodb:
-        condition: service_healthy
+    # Using MongoDB Atlas - no local dependency needed
     restart: unless-stopped
     networks:
       - skillbridge-network
@@ -48,11 +46,11 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
+      args:
+        - REACT_APP_API_URL=http://localhost:5000
     container_name: skillbridge-frontend
     ports:
       - "4000:80"
-    environment:
-      - REACT_APP_API_URL=http://skillbridge-backend:5000
     depends_on:
       - skillbridge-backend
     restart: unless-stopped

@@ -78,40 +78,45 @@ export const registerUser = async (req, res) => {
 };
 
 // @route   POST /api/users/login
-export const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  console.log('Login attempt for:', email);
+export const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    console.log('Login attempt for:', email);
 
-  if (!email || !password) {
-    throw new AppError('Email and password are required', ErrorTypes.VALIDATION_ERROR, 400);
-  }
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
 
-  const user = await User.findOne({ email });
-  if (!user) {
-    console.log('User not found:', email);
-    throw new AppError('Invalid email or password', ErrorTypes.AUTHENTICATION_ERROR, 401);
-  }
-  
-  console.log('User found, checking password...');
-  const isMatch = await user.matchPassword(password);
-  if (!isMatch) {
-    console.log('Password mismatch for:', email);
-    throw new AppError('Invalid email or password', ErrorTypes.AUTHENTICATION_ERROR, 401);
-  }
-  
-  console.log('Login successful for:', email);
+    const user = await User.findOne({ email });
+    if (!user) {
+      console.log('User not found:', email);
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    console.log('User found, checking password...');
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      console.log('Password mismatch for:', email);
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    console.log('Login successful for:', email);
 
-  res.json({
-    success: true,
-    _id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    college: user.college,
-    department: user.department,
-    token: generateToken(user._id),
-  });
-});
+    res.json({
+      success: true,
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      college: user.college,
+      department: user.department,
+      token: generateToken(user._id),
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Login failed' });
+  }
+};
 
 // @route   GET /api/users/profile
 export const getUserProfile = asyncHandler(async (req, res) => {
