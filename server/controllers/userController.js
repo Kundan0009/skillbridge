@@ -206,7 +206,17 @@ export const forgotPassword = async (req, res) => {
     });
 
     // Send OTP email
-    sendPasswordResetOTP(email, user.name, otp);
+    try {
+      await sendPasswordResetOTP(email, user.name, otp);
+      console.log('✅ OTP email sent successfully to:', email);
+    } catch (emailError) {
+      console.error('❌ Failed to send OTP email:', emailError.message);
+      // Delete the OTP record if email fails
+      await PasswordReset.deleteOne({ email, otp });
+      return res.status(500).json({ 
+        error: 'Failed to send OTP email. Please try again.' 
+      });
+    }
 
     res.json({
       success: true,

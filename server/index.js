@@ -50,12 +50,23 @@ if (process.env.NODE_ENV === 'production') {
 const allowedOrigins = [
   'http://localhost:4000',
   'http://localhost:3000',
+  'https://lj7rtwcw-4000.inc1.devtunnels.ms',
+  'https://skillbridge-kappa.vercel.app',
   process.env.CLIENT_URL
 ].filter(Boolean);
 
 app.use(cors({
-  origin: true,
-  credentials: true,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: false,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']
 }));

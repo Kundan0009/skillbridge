@@ -1,11 +1,12 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:9000',
-  timeout: 10000,
+  baseURL: process.env.REACT_APP_API_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:9000'),
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: false,
 });
 
 api.interceptors.request.use(

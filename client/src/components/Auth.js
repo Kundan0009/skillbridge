@@ -38,6 +38,9 @@ const Auth = ({ onLogin }) => {
       console.log('Attempting auth:', endpoint, payload);
       console.log('API Base URL:', api.defaults.baseURL);
       
+      // Test connection first
+      await api.get('/api/health');
+      
       const response = await api.post(endpoint, payload);
       
       console.log('Auth response:', response.data);
