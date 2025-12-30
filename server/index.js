@@ -51,7 +51,7 @@ const allowedOrigins = [
   'http://localhost:4000',
   'http://localhost:3000',
   'https://lj7rtwcw-4000.inc1.devtunnels.ms',
-  'https://skillbridge-kappa.vercel.app',
+  'https://skillbridge-j5l4-git-main-kundan-kumars-projects-3dfd602d.vercel.app',
   process.env.CLIENT_URL
 ].filter(Boolean);
 

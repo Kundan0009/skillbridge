@@ -34,6 +34,8 @@ services:
       - JWT_SECRET=${JWT_SECRET:-sk8f9j2k3l4m5n6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2z3}
       - CLIENT_URL=http://localhost:4000
       - PORT=5000
+      - EMAIL_USER=kundan95705@gmail.com
+      - EMAIL_PASS=dagn khnr wbhc bgrv
     volumes:
       - ./server/uploads:/app/uploads
       - ./server/logs:/app/logs
